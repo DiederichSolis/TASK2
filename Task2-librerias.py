@@ -1,61 +1,61 @@
 import pandas as pd
+import re
+from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-# 1. Lectura y preparación de los datos desde el archivo TXT
-# Se asume que cada línea tiene la estructura:
-#   etiqueta mensaje...
-# Ejemplo:
-#   ham Esto es un mensaje de ejemplo.
-#   spam ¡Gana dinero rápido sin esfuerzo!
+def normalize_text(text):
+    """
+    Normaliza el texto convirtiéndolo a minúsculas, eliminando puntuación, dígitos, URLs y espacios extra.
+    """
+    text = text.lower()  # Convertir a minúsculas
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)  # Eliminar URLs
+    text = re.sub(r'\S+@\S+', '', text)  # Eliminar correos electrónicos
+    text = re.sub(r'[^\w\s]', '', text)  # Eliminar puntuación y caracteres especiales
+    text = re.sub(r'\d+', '', text)  # Eliminar dígitos
+    text = re.sub(r'\s+', ' ', text).strip()  # Eliminar espacios extra
+    return text
+
 data = []
-archivo = "entrenamiento.txt"  # Asegúrate de que el archivo esté en el mismo directorio o proporciona la ruta completa
+archivo = "entrenamiento.txt"
 
 with open(archivo, "r", encoding="utf-8") as file:
     for line in file:
         line = line.strip()
         if not line:
-            continue  # Se saltan las líneas vacías
+            continue
         try:
-            label, message = line.split(" ", 1)
+            label, message = line.split("\t", 1)
         except ValueError:
-            # Si la línea no sigue el formato esperado, se ignora
             continue
         data.append({"label": label, "message": message})
 
-# Convertir la lista de diccionarios en un DataFrame
+
 df = pd.DataFrame(data)
 print("Datos de ejemplo:")
 print(df.head())
 
-# 2. Preparación de los datos para entrenamiento (se usan todos los datos)
 X = df['message']
 y = df['label']
 
-# 3. Transformación del texto a vectores numéricos
-# Se utiliza CountVectorizer para convertir cada mensaje en un vector de frecuencias
-vectorizer = CountVectorizer(stop_words='english')
-X_vect = vectorizer.fit_transform(X)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 4. Entrenamiento del clasificador Naive Bayes con Laplace smoothing
-# El parámetro alpha=1.0 aplica Laplace smoothing
+vectorizer = CountVectorizer(stop_words='english', preprocessor=normalize_text)
+X_train_vect = vectorizer.fit_transform(X_train)
+X_test_vect = vectorizer.transform(X_test)
+
 classifier = MultinomialNB(alpha=1.0)
-classifier.fit(X_vect, y)
+classifier.fit(X_train_vect, y_train)
 
-# 5. Evaluación del modelo sobre los datos de entrenamiento (una única impresión)
-y_pred = classifier.predict(X_vect)
-accuracy = accuracy_score(y, y_pred)
+y_pred = classifier.predict(X_test_vect)
+accuracy = accuracy_score(y_test, y_pred)
 print("\n--- Evaluación del modelo (sobre datos de entrenamiento) ---")
 print("Precisión del modelo:", accuracy)
 print("\nMatriz de confusión:")
-print(confusion_matrix(y, y_pred))
-print("\nReporte de clasificación:")
-print(classification_report(y, y_pred))
+print(confusion_matrix(y_test, y_pred))
 
-# 6. Clasificación de un mensaje ingresado por el usuario
 mensaje_usuario = input("\nIngrese un mensaje para clasificarlo (Spam o Ham): ")
 mensaje_vect = vectorizer.transform([mensaje_usuario])
 prediccion = classifier.predict(mensaje_vect)
 print("\nEl mensaje ingresado es clasificado como:", prediccion[0])
-
