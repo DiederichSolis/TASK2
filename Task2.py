@@ -88,6 +88,19 @@ class NaiveBayesClassifier:
 nb_classifier = NaiveBayesClassifier(alpha=1.0)
 nb_classifier.fit(X_train, y_train)
 
+# Task 2.3 - Clasificación de mensajes futuros
+def classify_new_messages():
+    while True:
+        print("----------------------------------------------------")
+        message = input("Ingrese un mensaje para clasificar (o escriba 'exit' para salir): ")
+        if message.lower() == 'exit':
+            break
+        label = nb_classifier.predict([message])[0]
+        print(f"\n📝 Mensaje: {message}")
+        print(f"📌 Clasificación: {label}\n")
+
+# Activar la clasificación interactiva
+classify_new_messages()
 
 y_pred = nb_classifier.predict(X_test)
 print("\n=== Evaluación del modelo ===")
