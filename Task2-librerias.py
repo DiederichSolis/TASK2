@@ -3,7 +3,7 @@ import re
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score 
 
 def normalize_text(text):
     """
@@ -49,9 +49,18 @@ classifier = MultinomialNB(alpha=1.0)
 classifier.fit(X_train_vect, y_train)
 
 y_pred = classifier.predict(X_test_vect)
+
 accuracy = accuracy_score(y_test, y_pred)
-print("\n--- Evaluación del modelo (sobre datos de entrenamiento) ---")
-print("Precisión del modelo:", accuracy)
+precision = precision_score(y_test, y_pred, pos_label="spam")
+recall = recall_score(y_test, y_pred, pos_label="spam")
+f1 = f1_score(y_test, y_pred, pos_label="spam")
+
+
+print("\n--- Evaluación del modelo (sobre datos de prueba) ---")
+print("Precisión (Accuracy):", accuracy)
+print("Precisión (Precision):", precision)
+print("Recall (Sensibilidad):", recall)
+print("F1-Score:", f1)
 print("\nMatriz de confusión:")
 print(confusion_matrix(y_test, y_pred))
 
