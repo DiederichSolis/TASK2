@@ -1,3 +1,4 @@
+# Reimportar librerías después del reset del entorno
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, classification_report
 
-# Cargar el dataset
+# Cargar el dataset nuevamente
 file_path = "high_diamond_ranked_10min.csv"
 df = pd.read_csv(file_path)
 
@@ -73,14 +74,45 @@ y_pred_selected = svm_selected.predict(X_test_selected)
 accuracy_selected = accuracy_score(y_test, np.where(y_pred_selected == -1, 0, 1))
 report_selected = classification_report(y_test, np.where(y_pred_selected == -1, 0, 1))
 
-# Generar la malla de puntos para la visualización
+# Calcular métricas adicionales
+precision = np.sum((y_test == 1) & (y_pred_selected == 1)) / np.sum(y_pred_selected == 1)
+recall = np.sum((y_test == 1) & (y_pred_selected == 1)) / np.sum(y_test == 1)
+f1_score = 2 * (precision * recall) / (precision + recall)
+
+# Calcular tasa de falsos positivos y falsos negativos
+false_positive_rate = np.sum((y_test == 0) & (y_pred_selected == 1)) / np.sum(y_test == 0)
+false_negative_rate = np.sum((y_test == 1) & (y_pred_selected == 0)) / np.sum(y_test == 1)
+
+# Número total de predicciones correctas e incorrectas
+correct_predictions = np.sum(y_test == y_pred_selected)
+incorrect_predictions = np.sum(y_test != y_pred_selected)
+
+# Mostrar las estadísticas
+stats = {
+    "Accuracy": accuracy_selected,
+    "Precision": precision,
+    "Recall": recall,
+    "F1 Score": f1_score,
+    "False Positive Rate": false_positive_rate,
+    "False Negative Rate": false_negative_rate,
+    "Correct Predictions": correct_predictions,
+    "Incorrect Predictions": incorrect_predictions,
+    "Total Samples": len(y_test)
+}
+
+import pandas as pd
+
+# Convertir el diccionario de estadísticas en un DataFrame para mostrarlo
+df_stats = pd.DataFrame(stats.items(), columns=["Métrica", "Valor"])
+print("Estadísticas del modelo SVM")
+print(df_stats)
+
+# Regenerar la malla de puntos para la visualización
 x_min, x_max = X_test_selected[:, 0].min() - 1, X_test_selected[:, 0].max() + 1
 y_min, y_max = X_test_selected[:, 1].min() - 1, X_test_selected[:, 1].max() + 1
 xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
 Z = svm_selected.predict(np.c_[xx.ravel(), yy.ravel()])
 Z = Z.reshape(xx.shape)
-
-print("Precisión del Modelo (Características Seleccionadas):", accuracy_selected)
 
 # Graficar la nueva frontera de decisión con las características seleccionadas
 plt.figure(figsize=(8, 6))
@@ -93,6 +125,3 @@ plt.ylabel(feature_2_name + ' (Normalizado)')
 plt.title('Frontera de Decisión del SVM (Sin Librerías)')
 plt.legend()
 plt.show()
-
-# Retornar los resultados de precisión
-accuracy_selected, report_selected
