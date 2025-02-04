@@ -1,9 +1,10 @@
 import pandas as pd
 import re
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score 
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score, ConfusionMatrixDisplay 
 
 def normalize_text(text):
     """
@@ -56,13 +57,19 @@ recall = recall_score(y_test, y_pred, pos_label="spam")
 f1 = f1_score(y_test, y_pred, pos_label="spam")
 
 
-print("\n--- Evaluación del modelo (sobre datos de prueba) ---")
+print("\n ===Evaluación del modelo (sobre datos de prueba)===")
 print("Precisión (Accuracy):", accuracy)
 print("Precisión (Precision):", precision)
 print("Recall (Sensibilidad):", recall)
 print("F1-Score:", f1)
 print("\nMatriz de confusión:")
 print(confusion_matrix(y_test, y_pred))
+
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classifier.classes_)
+disp.plot(cmap=plt.cm.Blues)
+plt.title("Matriz de Confusion")
+plt.show()
 
 mensaje_usuario = input("\nIngrese un mensaje para clasificarlo (Spam o Ham): ")
 mensaje_vect = vectorizer.transform([mensaje_usuario])
